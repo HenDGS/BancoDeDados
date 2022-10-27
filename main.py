@@ -27,18 +27,61 @@ import PySimpleGUI as sg
     except Error as e:
         print("Error while connecting to MySQL", e)'''
 
-# Function to read from csv file
+
+# Function to read all .csvs files in the folder and saves them in a list
 def read_from_csv():
-    data = np.genfromtxt('employees1000.csv', delimiter=',', dtype=None, encoding=None)
-    # data = np.genfromtxt('data.csv', delimiter=',')
-    return data
+    # Import libraries
+    import glob
+    import os
+    import csv
+    import numpy as np
+    # Get all files in the folder
+    files = glob.glob('*.csv')
+    # Create a list to save the data
+    data = []
+    # Read all files
+    for file in files:
+        # Read file
+        with open(file, 'r') as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            # Save data in a list
+            data.append(np.array(list(csv_reader)))
+    # Use gui to choose wich file to return
+    # Layout
+    layout = [
+        [sg.Text('Choose the file to return:')],
+        [sg.Listbox(values=files, size=(30, 6), key='files')],
+        [sg.Button('Ok')]
+    ]
+    # Create window
+    window = sg.Window('Choose file', layout)
+    # Read values
+    event, values = window.read()
+    # Close window
+    window.close()
+    # Return data
+    return data[files.index(values['files'][0])]
 
 # Function to recive an input with projection, where and order by; then search in the data
 def search(data):
+    # Extract columns from data
+    columns = data[0]
+    # Create a list with the columns
+    columns_list = []
+    for column in columns:
+        columns_list.append(column)
+    columns_list.append('*')
+    # Create a list with conditions
+    conditions_list = ['=!', '>', '<', '>=', '<=', '!=', 'between', 'like']
+    # Where is a list of
     # Layout
+    # Projection is a dropdown with all the columns
+    # Where is a input text
+    # Order by is a dropdown with all the columns
     layout = [
-        [sg.Text('Enter the projection: '), sg.Input(key='projection')],
+        [sg.Text('Projection:'), sg.Combo(columns_list, size=(20, 1), key='projection')],
         [sg.Text('Enter the where: '), sg.Input(key='where')],
+        [sg.Text('Condition:'), sg.Combo(conditions_list, size=(20, 1), key='condition')],
         [sg.Text('Enter the order by: '), sg.Input(key='order')],
         [sg.Button('Search')]
     ]
@@ -52,6 +95,7 @@ def search(data):
     projection = values['projection']
     where = values['where']
     order = values['order']
+    condition = values['condition']
     # Search in the data
     if where == '':
         if order == '':
@@ -77,12 +121,13 @@ def search(data):
                 print(data[projection][data[where]][np.argsort(data[order])])
 
 
-# Function to search by
 
 
 # Main function
 def main():
+    # Read all csvs files in the folder and save in a list
     data = read_from_csv()
+
     # Print columns in data
     print(data.dtype.names)
     # Search in data
