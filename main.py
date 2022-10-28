@@ -2,6 +2,9 @@ import mysql.connector
 import numpy as np
 from mysql.connector import Error
 import PySimpleGUI as sg
+import glob
+import os
+import csv
 
 # Function to read from mysql database
 '''def read_from_mysql():
@@ -28,9 +31,52 @@ import PySimpleGUI as sg
         print("Error while connecting to MySQL", e)'''
 
 
-# Function to read all .csvs files in the folder and saves them in a list
+# Function to receive a input query string in gui
 def read_from_csv():
-    # Import libraries
+    # Layout
+    layout = [
+        [sg.Text('Enter the query: '), sg.Input(key='query')],
+        [sg.Button('Search')]
+    ]
+    # Create window
+    window = sg.Window('Search', layout)
+    # Read values
+    event, values = window.read()
+    # Close window
+    window.close()
+    # Get values
+    query = values['query']
+    # Get all files in the folder
+    files = glob.glob('*.csv')
+    # Create a list to save the data
+    data = []
+    # Read all files
+    for file in files:
+        # Read file
+        with open(file, 'r') as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            # Save data in a list
+            data.append(np.array(list(csv_reader)))
+
+    # Split query into select, from and where
+    query = query.split(' ')
+    # Use the from query to choose the csv from files
+    sql_from = query[query.index('from') + 1]
+    if sql_from in files:
+        table = data[files.index(sql_from)]
+    else:
+        print('Table not found')
+
+    # Use the select query to choose the column
+    sql_select = query[query.index('select') + 1]
+    if sql_select == '*':
+        print(table)
+    else:
+        i = table[0].tolist().index(sql_select)
+        print(table[:,i])
+
+
+    '''# Import libraries
     import glob
     import os
     import csv
@@ -60,7 +106,8 @@ def read_from_csv():
     # Close window
     window.close()
     # Return data
-    return data[files.index(values['files'][0])]
+    return data[files.index(values['files'][0])]'''
+
 
 # Function to recive an input with projection, where and order by; then search in the data
 def search(data):
@@ -127,13 +174,10 @@ def search(data):
 def main():
     # Read all csvs files in the folder and save in a list
     data = read_from_csv()
-
-    # Print columns in data
-    print(data.dtype.names)
     # Search in data
-    search(data)
+    # search(data)
 
-    print(data[0])
+    # print(data[0])
 
 
 # Run main function
