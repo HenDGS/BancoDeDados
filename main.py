@@ -115,6 +115,7 @@ def read_from_csv():
         i = array[0].tolist().index(sql_select)
         print(array[:,i])
         new_array = array[:,i]
+        print(new_array)
 
 
     '''# Import libraries
