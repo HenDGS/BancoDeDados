@@ -81,24 +81,34 @@ def read_from_csv():
         # Get the index of the column
         column_index = np.where(array[0] == column_name)[0][0]
         # Get the index of the rows that match the condition
-        if condition == '=':
-            rows_index = np.where(array[:, column_index] == value)[0]
+        if condition == 'like':
+            rows_index = np.where(array[:, column_index] == value)
+            # Make a new array with the rows that match the condition, keeping column names
+            array = np.vstack((array[0], array[rows_index]))
+        elif condition == '=':
+            rows_index = np.where(array[:, column_index] == value)
+            # Make a new array with the rows that match the condition, keeping column names
+            array = np.vstack((array[0], array[rows_index]))
         elif condition == '>':
-            rows_index = np.where(array[:, column_index] > value)[0]
+            rows_index = np.where(array[:, column_index] > value)
+            # Make a new array with the rows that match the condition, keeping column names
+            array = np.vstack((array[0], array[rows_index]))
         elif condition == '<':
-            rows_index = np.where(array[:, column_index] < value)[0]
+            rows_index = np.where(array[:, column_index] < value)
+            # Make a new array with the rows that match the condition, keeping column names
+            array = np.vstack((array[0], array[rows_index]))
         elif condition == '>=':
-            rows_index = np.where(array[:, column_index] >= value)[0]
+            rows_index = np.where(array[:, column_index] >= value)
+            # Make a new array with the rows that match the condition, keeping column names
+            array = np.vstack((array[0], array[rows_index]))
         elif condition == '<=':
-            rows_index = np.where(array[:, column_index] <= value)[0]
-        elif condition == '!=':
-            rows_index = np.where(array[:, column_index] != value)[0]
+            rows_index = np.where(array[:, column_index] <= value)
+            # Make a new array with the rows that match the condition, keeping column names
+            array = np.vstack((array[0], array[rows_index]))
         elif condition == 'between':
             # Get the second value
             value2 = query[where_index + 4]
-            rows_index = np.where((array[:, column_index] >= value) & (array[:, column_index] <= value2))[0]
-        elif condition == 'like':
-            rows_index = np.where(array[:, column_index] == value)
+            rows_index = np.where((array[:, column_index] >= value) & (array[:, column_index] <= value2))
             # Make a new array with the rows that match the condition, keeping column names
             array = np.vstack((array[0], array[rows_index]))
 
@@ -113,7 +123,7 @@ def read_from_csv():
         print(array)
     else:
         i = array[0].tolist().index(sql_select)
-        print(array[:,i])
+        # print(array[:,i])
         new_array = array[:,i]
         print(new_array)
 
@@ -218,7 +228,7 @@ def main():
     data = read_from_csv()
     # Search in data
     # search(data)
-    print('a')
+    print('')
 
     # print(data[0])
 
