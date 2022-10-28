@@ -63,17 +63,58 @@ def read_from_csv():
     # Use the from query to choose the csv from files
     sql_from = query[query.index('from') + 1]
     if sql_from in files:
-        table = data[files.index(sql_from)]
+        array = data[files.index(sql_from)]
     else:
         print('Table not found')
+
+    # Use the where query to filter by condition
+    # Dele rows that don't match the condition from the numpy array
+    if 'where' in query:
+        # Get the index of where
+        where_index = query.index('where')
+        # Get the column name
+        column_name = query[where_index + 1]
+        # Get the condition
+        condition = query[where_index + 2]
+        # Get the value
+        value = query[where_index + 3]
+        # Get the index of the column
+        column_index = np.where(array[0] == column_name)[0][0]
+        # Get the index of the rows that match the condition
+        if condition == '=':
+            rows_index = np.where(array[:, column_index] == value)[0]
+        elif condition == '>':
+            rows_index = np.where(array[:, column_index] > value)[0]
+        elif condition == '<':
+            rows_index = np.where(array[:, column_index] < value)[0]
+        elif condition == '>=':
+            rows_index = np.where(array[:, column_index] >= value)[0]
+        elif condition == '<=':
+            rows_index = np.where(array[:, column_index] <= value)[0]
+        elif condition == '!=':
+            rows_index = np.where(array[:, column_index] != value)[0]
+        elif condition == 'between':
+            # Get the second value
+            value2 = query[where_index + 4]
+            rows_index = np.where((array[:, column_index] >= value) & (array[:, column_index] <= value2))[0]
+        elif condition == 'like':
+            rows_index = np.where(array[:, column_index] == value)
+            # Make a new array with the rows that match the condition, keeping column names
+            array = np.vstack((array[0], array[rows_index]))
+
+        else:
+            print('Condition not found')
+        # Delete rows that don't match the condition
+        # array = np.delete(array, rows_index, axis=0)
 
     # Use the select query to choose the column
     sql_select = query[query.index('select') + 1]
     if sql_select == '*':
-        print(table)
+        print(array)
     else:
-        i = table[0].tolist().index(sql_select)
-        print(table[:,i])
+        i = array[0].tolist().index(sql_select)
+        print(array[:,i])
+        new_array = array[:,i]
 
 
     '''# Import libraries
@@ -176,6 +217,7 @@ def main():
     data = read_from_csv()
     # Search in data
     # search(data)
+    print('a')
 
     # print(data[0])
 
