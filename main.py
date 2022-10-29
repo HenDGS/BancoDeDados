@@ -1,10 +1,8 @@
-import mysql.connector
-import numpy as np
-from mysql.connector import Error
-import PySimpleGUI as sg
-import glob
-import os
 import csv
+import glob
+
+import PySimpleGUI as sg
+import numpy as np
 
 # Function to read from mysql database
 '''def read_from_mysql():
@@ -68,7 +66,7 @@ def read_from_csv():
         print('Table not found')
 
     # Use the where query to filter by condition
-    # Dele rows that don't match the condition from the numpy array
+    # Delete rows that don't match the condition from the numpy array
     if 'where' in query:
         # Get the index of where
         where_index = query.index('where')
@@ -78,6 +76,11 @@ def read_from_csv():
         condition = query[where_index + 2]
         # Get the value
         value = query[where_index + 3]
+        # Verify if there are two conditions with an "and" or "or"
+        try:
+            andor = query[where_index + 4]
+        except IndexError:
+            andor = "indexerror"
         # Get the index of the column
         column_index = np.where(array[0] == column_name)[0][0]
         # Get the index of the rows that match the condition
@@ -107,26 +110,124 @@ def read_from_csv():
             array = np.vstack((array[0], array[rows_index]))
         elif condition == 'between':
             # Get the second value
-            value2 = query[where_index + 4]
-            rows_index = np.where((array[:, column_index] >= value) & (array[:, column_index] <= value2))
+            value2 = query[where_index + 5]
+            rows_index = np.where((array[:, column_index] > value) & (array[:, column_index] < value2))
             # Make a new array with the rows that match the condition, keeping column names
             array = np.vstack((array[0], array[rows_index]))
 
         else:
             print('Condition not found')
+
+        if andor == 'and':
+            # Get the column name
+            column_name2 = query[where_index + 5]
+            # Get the condition
+            condition2 = query[where_index + 6]
+            # Get the value
+            value2 = query[where_index + 7]
+            # Get the index of the column
+            column_index2 = np.where(array[0] == column_name2)[0][0]
+            # Get the index of the rows that match the condition
+            if condition2 == 'like':
+                rows_index2 = np.where(array[:, column_index2] == value2)
+                # Make a new array with the rows that match the condition, keeping column names
+                array = np.vstack((array[0], array[rows_index2]))
+            elif condition2 == '=':
+                rows_index2 = np.where(array[:, column_index2] == value2)
+                # Make a new array with the rows that match the condition, keeping column names
+                array = np.vstack((array[0], array[rows_index2]))
+            elif condition2 == '>':
+                rows_index2 = np.where(array[:, column_index2] > value2)
+                # Make a new array with the rows that match the condition, keeping column names
+                array = np.vstack((array[0], array[rows_index2]))
+            elif condition2 == '<':
+                rows_index2 = np.where(array[:, column_index2] < value2)
+                # Make a new array with the rows that match the condition, keeping column names
+                array = np.vstack((array[0], array[rows_index2]))
+            elif condition2 == '>=':
+                rows_index2 = np.where(array[:, column_index2] >= value2)
+                # Make a new array with the rows that match the condition, keeping column names
+                array = np.vstack((array[0], array[rows_index2]))
+            elif condition2 == '<=':
+                rows_index2 = np.where(array[:, column_index2] <= value2)
+                # Make a new array with the rows that match the condition, keeping column names
+                array = np.vstack((array[0], array[rows_index2]))
+            else:
+                print('Condition not found')
+
+        elif andor == 'or':
+            column_name2 = query[where_index + 5]
+            condition2 = query[where_index + 6]
+            value2 = query[where_index + 7]
+            array2 = data[files.index(sql_from)]
+            column_index2 = np.where(array2[0] == column_name2)[0][0]
+            # Get the index of the rows that match the condition
+            if condition2 == 'like':
+                rows_index = np.where(array2[:, column_index2] == value2)
+                array2 = array2[rows_index]
+                array2 = array2[1:]
+                array = np.vstack((array, array2))
+            elif condition2 == '=':
+                rows_index = np.where(array2[:, column_index2] == value2)
+                # Make a new array with the rows that match the condition
+                array2 = array2[rows_index]
+                array2 = array2[1:]
+                array = np.vstack((array, array2))
+            elif condition2 == '>':
+                rows_index = np.where(array2[:, column_index2] > value2)
+                # Make a new array with the rows that match the condition
+                array2 = array2[rows_index]
+                array2 = array2[1:]
+                array = np.vstack((array, array2))
+            elif condition2 == '<':
+                rows_index = np.where(array2[:, column_index2] < value2)
+                # Make a new array with the rows that match the condition
+                array2 = array2[rows_index]
+                array2 = array2[1:]
+                array = np.vstack((array, array2))
+            elif condition2 == '>=':
+                rows_index = np.where(array2[:, column_index2] >= value2)
+                # Make a new array with the rows that match the condition
+                array2 = array2[rows_index]
+                array2 = array2[1:]
+                array = np.vstack((array, array2))
+            elif condition2 == '<=':
+                rows_index = np.where(array2[:, column_index2] <= value2)
+                # Make a new array with the rows that match the condition
+                array2 = array2[rows_index]
+                array2 = array2[1:]
+                array = np.vstack((array, array2))
+            elif condition2 == 'between':
+                # Get the second value
+                value3 = query[where_index + 9]
+                rows_index = np.where((array2[:, column_index2] > value2) & (array2[:, column_index2] < value3))
+                # Make a new array with the rows that match the condition
+                array2 = array2[rows_index]
+                array2 = array2[1:]
+                array = np.vstack((array, array2))
+
         # Delete rows that don't match the condition
         # array = np.delete(array, rows_index, axis=0)
 
-    # Use the select query to choose the column
-    sql_select = query[query.index('select') + 1]
+    # Use the select query to choose the column(s)
+    columns_count = 1
+    sql_select = query[query.index('select') + columns_count]
+
     if sql_select == '*':
         print(array)
     else:
+        while sql_select.find(",") >= 0:
+            sql_select = sql_select.replace(',', '')
+            i = array[0].tolist().index(sql_select)
+            # print(array[:,i])
+            new_array = array[:, i]
+            print(new_array)
+            columns_count += 1
+            sql_select = query[query.index('select') + columns_count]
         i = array[0].tolist().index(sql_select)
         # print(array[:,i])
-        new_array = array[:,i]
+        new_array = array[:, i]
         print(new_array)
-
 
     '''# Import libraries
     import glob
@@ -220,12 +321,10 @@ def search(data):
                 print(data[projection][data[where]][np.argsort(data[order])])
 
 
-
-
 # Main function
 def main():
     # Read all csvs files in the folder and save in a list
-    data = read_from_csv()
+    read_from_csv()
     # Search in data
     # search(data)
     print('')
